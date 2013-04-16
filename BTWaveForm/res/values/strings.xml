@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hello">Hello World, BTConnectActivity!</string>
+    <string name="app_name">BTWaveForm</string>
+    <string name="btswitch">Bluetooth Switch</string>
+    <string name="btsearchdevices">Search Devices</string>
+    <string name="devicename">Device Name:</string>
+    <string name="devicestatus">Status:</string>
+</resources>
