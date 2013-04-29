@@ -8,11 +8,15 @@
 
 package com.hkyudong.BluetoothOscilloscope;
 
+import java.util.Random;
+
+import android.R.integer;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.SurfaceView;
 import android.view.SurfaceHolder;
 
@@ -20,38 +24,44 @@ public class WaveformView extends SurfaceView implements SurfaceHolder.Callback{
 	
 	private WaveformPlotThread plot_thread;
 	
-	private final static int WIDTH = 320;//320;
+	private static int WIDTH = 320;//320;
 	private final static int HEIGHT = 320;
+
+	private static final String MYTAG = "hkyudong";
 	
-	private static int[] ch1_data = new int[WIDTH];
-	private static int[] ch2_data = new int[WIDTH];
-	private static int ch1_pos = 120, ch2_pos = 200;
 	
-	private Paint ch1_color = new Paint();
-	private Paint ch2_color = new Paint();
+	private int nowX = 0;
+	private static int[]  data = new int[WIDTH];
+
+//	private static int ch1_pos = 120, ch2_pos = 200;
+	
+	private Paint line_paint = new Paint();
+//	private Paint ch2_color = new Paint();
 	private Paint grid_paint = new Paint();
 	private Paint cross_paint = new Paint();
 	private Paint outline_paint = new Paint();
+	private Paint nowX_paint = new Paint();
 	
 	public WaveformView(Context context, AttributeSet attrs) {  
 
 		super(context, attrs);  
 		//super(context);
 		getHolder().addCallback(this);
-		
+/*	
 		int i;
 		for(i=0; i<WIDTH; i++){
-			ch1_data[i] = ch1_pos;
-			ch2_data[i] = ch2_pos;
+			data[i] =30 + i%50;
+//			ch2_data[i] = ch2_pos;
 		}
-		
+*/		
 		plot_thread = new WaveformPlotThread(getHolder(), this);
 		//setFocusable(true);
-		ch1_color.setColor(Color.YELLOW);
-		ch2_color.setColor(Color.RED);
+		line_paint.setColor(Color.YELLOW);
+//		ch2_color.setColor(Color.RED);
 		grid_paint.setColor(Color.rgb(100, 100, 100));
 		cross_paint.setColor(Color.rgb(70, 100, 70));
 		outline_paint.setColor(Color.GREEN);
+		nowX_paint.setColor(Color.RED);
 	}
 
 	@Override
@@ -87,17 +97,44 @@ public class WaveformView extends SurfaceView implements SurfaceHolder.Callback{
 		PlotPoints(canvas);
 		
 	}
+	public void set_data(int tempdata){
+	       
+			plot_thread.setRunning(false);	
+			int i = nowX;
+			if(i < WIDTH){
+				data[nowX] = HEIGHT-tempdata+1;
+//				Log.i(MYTAG, Integer.toString(data[nowX]), null);
+				nowX++;
+				if (WIDTH == nowX) {
+					nowX=0;
+				}
+				Log.i(MYTAG, Integer.toString(nowX), null);
+			}
+			plot_thread.setRunning(true);
+	}
 	
-	public void set_data(int[] data1, int[] data2 ){
-		int x;
+	public void set_data(int[] tempdata){
+//       Log.i(MYTAG, tempdata.toString(), null);
+		plot_thread.setRunning(false);
+		int i;
+		for(i = 0;i <tempdata.length;i++){
+			if(nowX <= WIDTH){
+				data[nowX] = HEIGHT-tempdata[i]+1;
+				nowX++;
+			}else {
+//				plot_thread.setRunning(true);
+				nowX=0;
+				}
+		}
+/*		int x;
 		plot_thread.setRunning(false);
 		x = 0;
 		while(x<WIDTH){
-			if(x<(data1.length)){
+			if(x<(tempdata.length)){
 				//ch1_data[x] = data1[x];
-				ch1_data[x] = HEIGHT-data1[x]+1;
+				data[x] = HEIGHT-tempdata[x]+1;
 			}else{
-				ch1_data[x] = ch1_pos;
+//				ch1_data[x] = ch1_pos;
 			}
 			x++;
 		}
@@ -111,6 +148,7 @@ public class WaveformView extends SurfaceView implements SurfaceHolder.Callback{
 			}
 			x++;
 		}
+*/		
 		plot_thread.setRunning(true);
 	}
 	
@@ -142,12 +180,17 @@ public class WaveformView extends SurfaceView implements SurfaceHolder.Callback{
 		canvas.drawLine((WIDTH+1), 0, (WIDTH+1), (HEIGHT+1), outline_paint); //right
 		canvas.drawLine(0, (HEIGHT+1), (WIDTH+1), (HEIGHT+1), outline_paint); // bottom
 		canvas.drawLine(0, 0, 0, (HEIGHT+1), outline_paint); //left
+
 		
+//		Log.i(MYTAG, Integer.toString(nowX), null);
+//		Log.i(MYTAG, "111", null);
 		// plot data
 		for(int x=0; x<(WIDTH-1); x++){			
-			canvas.drawLine(x+1, ch2_data[x], x+2, ch2_data[x+1], ch2_color);
-			canvas.drawLine(x+1, ch1_data[x], x+2, ch1_data[x+1], ch1_color);
+			canvas.drawLine(x+1, data[x], x+2, data[x+1], line_paint);
+//			canvas.drawLine(x+1, ch1_data[x], x+2, ch1_data[x+1], ch1_color);
+//			Log.i(MYTAG, Integer.toString(data[x]), null);
 		}
+		canvas.drawLine(nowX, 0,nowX, HEIGHT, nowX_paint);//刷新分界线
 	}
 
 }

@@ -15,9 +15,11 @@ import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.os.PowerManager;
+import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.View.OnClickListener;
@@ -38,6 +40,7 @@ public class BluetoothOscilloscope extends Activity implements  Button.OnClickLi
     public static final int MESSAGE_WRITE = 3;
     public static final int MESSAGE_DEVICE_NAME = 4;
     public static final int MESSAGE_TOAST = 5;
+    public static final int FILE_READ = 6;
 
     // Key names received from the BluetoothRfcommClient Handler
     public static final String DEVICE_NAME = "device_name";
@@ -61,16 +64,20 @@ public class BluetoothOscilloscope extends Activity implements  Button.OnClickLi
     private static final byte  CHANNEL1 = 0x01;
     private static final byte  CHANNEL2 = 0x02;
 
+	private static final String MYTAG = "hkyudong01";
+
     // Layout Views
     private TextView mBTStatus;//运行状态TextView
-    private TextView time_per_div;//美妙次数
-    private TextView ch1_scale, ch2_scale;//信号一，二的刻度间隔
-    private TextView ch1pos_label, ch2pos_label;//信号一，二在画布上的上下位置
-    private RadioButton rb1, rb2;//信号一，二选择单选框
-    private Button timebase_inc, timebase_dec;
+    private TextView txtYshrink;//y周伸缩
+    private TextView ch1_scale;//信号一，二的刻度间隔
+    private TextView ch1pos_label;//信号一，二在画布上的上下位置
+    private RadioButton rb1;//信号一，二选择单选框
+//    private Button timebase_inc, timebase_dec;
     private Button btn_scale_up, btn_scale_down;
     private Button btn_pos_up, btn_pos_down;//pos位置
     private Button mConnectButton;//连接button
+    
+    private Button readfileButton;
     private ToggleButton run_buton;//运行状态ToggleButton
     
     // Name of the connected device
@@ -80,21 +87,25 @@ public class BluetoothOscilloscope extends Activity implements  Button.OnClickLi
     // Member object for the RFCOMM services
     private BluetoothRfcommClient mRfcommClient = null;
     
+    private ReadOldFile readOldFile = null;
+    
     protected PowerManager.WakeLock mWakeLock;
     
     public WaveformView mWaveform = null;
     
-    static String[] timebase = {"5us", "10us", "20us", "50us", "100us", "200us", "500us", "1ms", "2ms", "5ms", "10ms", "20ms", "50ms" };
+//    static String[] timebase = {"5us", "10us", "20us", "50us", "100us", "200us", "500us", "1ms", "2ms", "5ms", "10ms", "20ms", "50ms" };
 	static String[] ampscale = {"10mV", "20mV", "50mV", "100mV", "200mV", "500mV", "1V", "2V", "GND"};
 	static byte timebase_index = 5;//采样时间序号
-	static byte ch1_index = 4, ch2_index = 5;
-	static byte ch1_pos = 20, ch2_pos = 25;	// 0 to 40
+	static byte ch1_index = 4;// ch2_index = 5;
+	static byte ch1_pos = 20;// ch2_pos = 25;	// 0 to 40
 	private int[] ch1_data = new int[MAX_SAMPLES/2];
-	private int[] ch2_data = new int[MAX_SAMPLES/2];
+//	private int[] ch2_data = new int[MAX_SAMPLES/2];
 	
 	private int dataIndex=0, dataIndex1=0, dataIndex2=0;
 	private boolean bDataAvailable=false;
 
+	//my
+	private  int Yshrink = 20;
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -118,7 +129,8 @@ public class BluetoothOscilloscope extends Activity implements  Button.OnClickLi
         PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
         this.mWakeLock = pm.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK, "My Tag"); 
         this.mWakeLock.acquire();
-
+       
+		
     }
 
     @Override
@@ -132,6 +144,14 @@ public class BluetoothOscilloscope extends Activity implements  Button.OnClickLi
         // Otherwise, setup the Oscillosope session
         } else {
             if (mRfcommClient == null) setupOscilloscope();
+            int i;
+    		for(i=0; i<320; i++){
+    			int a ;
+    			a=30 + i%50;
+//    			Log.i(MYTAG,Integer.toString(a), null);
+    			mWaveform.set_data(a);
+    		}
+    		
         }
     }
 
@@ -153,22 +173,22 @@ public class BluetoothOscilloscope extends Activity implements  Button.OnClickLi
 
     private void setupOscilloscope() {
         
-        time_per_div = (TextView)findViewById(R.id.txt_timebase);
-        time_per_div.setText(timebase[timebase_index]);
-        timebase_inc = (Button) findViewById(R.id.btn_timebase_increase);
-        timebase_dec = (Button) findViewById(R.id.btn_timebase_decrease);
-        timebase_inc.setOnClickListener(this);
-        timebase_dec.setOnClickListener(this);
+       txtYshrink = (TextView)findViewById(R.id.txt_Yshrink);
+       txtYshrink.setText(Integer.toString(Yshrink));
+//        timebase_inc = (Button) findViewById(R.id.btn_timebase_increase);
+//        timebase_dec = (Button) findViewById(R.id.btn_timebase_decrease);
+//        timebase_inc.setOnClickListener(this);
+//        timebase_dec.setOnClickListener(this);
         
         run_buton = (ToggleButton) findViewById(R.id.tbtn_runtoggle);
         run_buton.setOnClickListener(this);
         rb1 = (RadioButton)findViewById(R.id.rbtn_ch1);
-        rb2 = (RadioButton)findViewById(R.id.rbtn_ch2);
+//        rb2 = (RadioButton)findViewById(R.id.rbtn_ch2);
         
         ch1_scale = (TextView) findViewById(R.id.txt_ch1_scale);
-        ch2_scale = (TextView) findViewById(R.id.txt_ch2_scale);
+//        ch2_scale = (TextView) findViewById(R.id.txt_ch2_scale);
         ch1_scale.setText(ampscale[ch1_index]);
-        ch2_scale.setText(ampscale[ch2_index]);
+//        ch2_scale.setText(ampscale[ch2_index]);
         
         btn_scale_up = (Button) findViewById(R.id.btn_scale_increase);
         btn_scale_down = (Button) findViewById(R.id.btn_scale_decrease);
@@ -181,9 +201,28 @@ public class BluetoothOscilloscope extends Activity implements  Button.OnClickLi
         btn_pos_down.setOnClickListener(this);
         
         ch1pos_label = (TextView) findViewById(R.id.txt_ch1pos);
-        ch2pos_label = (TextView) findViewById(R.id.txt_ch2pos);
+//        ch2pos_label = (TextView) findViewById(R.id.txt_ch2pos);
         ch1pos_label.setPadding(0, toScreenPos(ch1_pos), 0, 0);
-        ch2pos_label.setPadding(0, toScreenPos(ch2_pos), 0, 0);
+//        ch2pos_label.setPadding(0, toScreenPos(ch2_pos), 0, 0);
+        
+        
+        readfileButton = (Button) findViewById(R.id.button_readfile);
+        readfileButton.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+//				 String SDPATH = Environment.getExternalStorageDirectory().getPath();
+//				 String filepath = SDPATH + "//" + "lph.txt";
+				if (Environment.getExternalStorageState().equalsIgnoreCase(Environment.MEDIA_MOUNTED)) {
+					readOldFile = new ReadOldFile(BluetoothOscilloscope.this, mHandler, "lph.txt");
+			        readOldFile.start();
+				}else {
+					Toast.makeText(getApplicationContext(), "读取失败，sd卡不存在", Toast.LENGTH_LONG).show();
+				}
+			    
+			}
+		});
         
         mConnectButton = (Button) findViewById(R.id.button_connect);
         mConnectButton.setOnClickListener(new OnClickListener() {
@@ -209,42 +248,42 @@ public class BluetoothOscilloscope extends Activity implements  Button.OnClickLi
     			ch1_pos += 1; ch1pos_label.setPadding(0, toScreenPos(ch1_pos), 0, 0);
     			sendMessage( new String(new byte[] {ADJ_POSITION, CHANNEL1, ch1_pos}) );
     		}
-    		else if(rb2.isChecked() && (ch2_pos<38) ){
+/*    		else if(rb2.isChecked() && (ch2_pos<38) ){
     			ch2_pos += 1; ch2pos_label.setPadding(0, toScreenPos(ch2_pos), 0, 0);
     			sendMessage( new String(new byte[] {ADJ_POSITION, CHANNEL2, ch2_pos}) );
     		}
-    		break;
+*/    		break;
     	case R.id.btn_position_down :
     		if(rb1.isChecked() && (ch1_pos>4) ){
     			ch1_pos -= 1; ch1pos_label.setPadding(0, toScreenPos(ch1_pos), 0, 0);
     			sendMessage( new String(new byte[] {ADJ_POSITION, CHANNEL1, ch1_pos}) );
     		}
-    		else if(rb2.isChecked() && (ch2_pos>4) ){
+/*    		else if(rb2.isChecked() && (ch2_pos>4) ){
     			ch2_pos -= 1; ch2pos_label.setPadding(0, toScreenPos(ch2_pos), 0, 0);
     			sendMessage( new String(new byte[] {ADJ_POSITION, CHANNEL2, ch2_pos}) );
     		}
-    		break;
+ */   		break;
     	case R.id.btn_scale_increase :
-    		if(rb1.isChecked() && (ch1_index>0)){
-    			ch1_scale.setText(ampscale[--ch1_index]);
-    			sendMessage( new String(new byte[] {ADJ_VERTICAL, CHANNEL1, ch1_index}) );
+    		if(0 < Yshrink){
+    			Yshrink--;
+    			txtYshrink.setText(Integer.toString(Yshrink));
     		}
-    		else if(rb2.isChecked() && (ch2_index>0)){
+/*    		else if(rb2.isChecked() && (ch2_index>0)){
     			ch2_scale.setText(ampscale[--ch2_index]);
     			sendMessage( new String(new byte[] {ADJ_VERTICAL, CHANNEL2, ch2_index}) );
     		}
-    		break;
+*/    		break;
     	case R.id.btn_scale_decrease :
-    		if(rb1.isChecked() && (ch1_index<(ampscale.length-1))){
-    			ch1_scale.setText(ampscale[++ch1_index]);
-    			sendMessage( new String(new byte[] {ADJ_VERTICAL, CHANNEL1, ch1_index}) );
+    		if(50 > Yshrink){
+    			Yshrink++;
+    			txtYshrink.setText(Integer.toString(Yshrink));
     		}
-    		else if(rb2.isChecked() && (ch2_index<(ampscale.length-1))){
+/*    		else if(rb2.isChecked() && (ch2_index<(ampscale.length-1))){
     			ch2_scale.setText(ampscale[++ch2_index]);
     			sendMessage( new String(new byte[] {ADJ_VERTICAL, CHANNEL2, ch2_index}) );
     		}
-    		break;
-    	case R.id.btn_timebase_increase :
+*/    		break;
+/*    	case R.id.btn_timebase_increase :
     		if(timebase_index<(timebase.length-1)){
     			time_per_div.setText(timebase[++timebase_index]);
     			sendMessage( new String(new byte[] {ADJ_HORIZONTAL, timebase_index}) );
@@ -256,18 +295,25 @@ public class BluetoothOscilloscope extends Activity implements  Button.OnClickLi
     			sendMessage( new String(new byte[] {ADJ_HORIZONTAL, timebase_index}) );
     		}
     		break;
-    	case R.id.tbtn_runtoggle :
+*/    	case R.id.tbtn_runtoggle :
     		if(run_buton.isChecked()){
-    			sendMessage( new String(new byte[] {
+/*    			sendMessage( new String(new byte[] {
     					ADJ_HORIZONTAL, timebase_index,
     					ADJ_VERTICAL, CHANNEL1, ch1_index,
     					ADJ_VERTICAL, CHANNEL2, ch2_index,
     					ADJ_POSITION, CHANNEL1, ch1_pos,
     					ADJ_POSITION, CHANNEL2, ch2_pos,
     					REQ_DATA}) );
+*/    			if (null !=readOldFile && Thread.State.RUNNABLE != readOldFile.getState()) {
+//					readOldFile.start();
+				};	
+				readOldFile.set_wait(false);
     			bReady = true;
-    		}
-    		else{
+    		}else{
+    			//readOldFile.cancle();
+    			
+    			readOldFile.set_wait(true);
+    			Log.i(MYTAG, "aaaaaaaa", null);
     			bReady = false;
     		}
     		break;
@@ -287,6 +333,7 @@ public class BluetoothOscilloscope extends Activity implements  Button.OnClickLi
     @Override
     public void onDestroy() {
         super.onDestroy();
+        if (readOldFile != null) readOldFile.destroy();
         // Stop the Bluetooth RFCOMM services
         if (mRfcommClient != null) mRfcommClient.stop();
         // release screen being on
@@ -356,7 +403,7 @@ public class BluetoothOscilloscope extends Activity implements  Button.OnClickLi
                 			//疑问：当因满足dataIndex>=MAX_SAMPLES而使bDataAvailable变为 false之后数据传输还没结束，如何让bDataAvailable变为 ture啊？
                     		bDataAvailable = false;
                     		dataIndex = 0; dataIndex1=0; dataIndex2=0;
-                    		mWaveform.set_data(ch1_data, ch2_data);                      	
+                    		mWaveform.set_data(ch1_data);                      	
                         	if(bReady){ // send "REQ_DATA" again
                         		BluetoothOscilloscope.this.sendMessage( new String(new byte[] {REQ_DATA}) );//数据接收完毕，通知设备继续发送数据
                         	}
@@ -365,11 +412,21 @@ public class BluetoothOscilloscope extends Activity implements  Button.OnClickLi
                 	}
                 	else if( (bDataAvailable) && (dataIndex<(MAX_SAMPLES)) ){ // valid data有效的数据
                 		if((dataIndex++)%2==0) ch1_data[dataIndex1++] = raw;	// even data 偶数数据
-                		else ch2_data[dataIndex2++] = raw;	// odd data 奇数数据
+//                		else ch2_data[dataIndex2++] = raw;	// odd data 奇数数据
                 	}
                 	
                 }
                 break;
+                
+            //my
+            case FILE_READ : 
+            	//time_per_div.setText("aaa");
+            	int readdata;
+            	readdata = msg.arg1;
+ //           	Log.i(MYTAG, Integer.toString(readdata), null);
+            	mWaveform.set_data(readdata/Yshrink);            	
+            	break;
+            	
             case MESSAGE_DEVICE_NAME:
                 // save the connected device's name
                 mConnectedDeviceName = msg.getData().getString(DEVICE_NAME);

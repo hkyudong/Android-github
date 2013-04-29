@@ -19,30 +19,28 @@ public final class R {
         public static final int btn_position_up=0x7f050010;
         public static final int btn_scale_decrease=0x7f050014;
         public static final int btn_scale_increase=0x7f050013;
-        public static final int btn_timebase_decrease=0x7f050019;
-        public static final int btn_timebase_increase=0x7f050018;
-        public static final int button_connect=0x7f05001a;
+        public static final int button_connect=0x7f050017;
+        public static final int button_readfile=0x7f050018;
         public static final int button_scan=0x7f050002;
-        public static final int linearlayout_Togglebutton_Status=0x7f05001b;
+        public static final int linearlayout_Togglebutton_Status=0x7f050019;
         public static final int linearlayout_button_changePos=0x7f05000f;
         public static final int linearlayout_button_changeScale=0x7f050012;
-        public static final int linearlayout_button_changetimebase=0x7f050017;
+        public static final int linearlayout_info_Yshrink=0x7f050015;
         public static final int linearlayout_info_changeRadioButton=0x7f05000a;
-        public static final int linearlayout_info_timebase=0x7f050015;
         public static final int new_devices=0x7f050004;
         public static final int paired_devices=0x7f050003;
         public static final int rbtn_ch1=0x7f05000b;
         public static final int rbtn_ch2=0x7f05000d;
         public static final int relayout_waveformArea=0x7f050006;
-        public static final int tbtn_runtoggle=0x7f05001c;
+        public static final int tbtn_runtoggle=0x7f05001a;
         public static final int title_new_devices=0x7f050001;
         public static final int title_paired_devices=0x7f050000;
+        public static final int txt_Yshrink=0x7f050016;
         public static final int txt_btstatus=0x7f050005;
         public static final int txt_ch1_scale=0x7f05000c;
         public static final int txt_ch1pos=0x7f050008;
         public static final int txt_ch2_scale=0x7f05000e;
         public static final int txt_ch2pos=0x7f050009;
-        public static final int txt_timebase=0x7f050016;
     }
     public static final class layout {
         public static final int device_list=0x7f030000;
