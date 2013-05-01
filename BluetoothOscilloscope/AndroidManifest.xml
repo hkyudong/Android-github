@@ -16,6 +16,10 @@
         		android:name=".DeviceListActivity"
         		android:theme="@android:style/Theme.Dialog">
         </activity>
+        <activity 
+        		android:name=".FileListActivity"
+        		android:theme="@android:style/Theme.Dialog">
+        </activity>
     </application>
     <uses-sdk android:minSdkVersion="9" />
     <uses-permission android:name="android.permission.BLUETOOTH" />

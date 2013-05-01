@@ -4,8 +4,19 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     >
+    <TextView
+	android:id="@+id/txt_filestatus" 
+	android:textColor="#00ff00"
+	android:textSize="15dip"
+	android:layout_centerHorizontal="true"
+    android:layout_width="fill_parent" 
+    android:layout_height="wrap_content"
+    android:textStyle="normal"
+    android:visibility = "gone"
+    />
 	<TextView
 	android:id="@+id/txt_btstatus" 
+	android:layout_below="@id/txt_filestatus"
 	android:textColor="#00ff00"
 	android:textSize="15dip"
 	android:layout_centerHorizontal="true"

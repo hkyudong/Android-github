@@ -45,11 +45,11 @@ public class BluetoothOscilloscope extends Activity implements  Button.OnClickLi
     // Key names received from the BluetoothRfcommClient Handler
     public static final String DEVICE_NAME = "device_name";
     public static final String TOAST = "toast";
-
+    
     // Intent request codes
     private static final int REQUEST_CONNECT_DEVICE = 1;
     private static final int REQUEST_ENABLE_BT = 2;
-    
+    private static final int REQUEST_CONNECT_FILE = 3;
     // bt-uart constants
     private static final int MAX_SAMPLES = 640;//最大采样像素？
     private static final int  MAX_LEVEL	= 240;//最大水平像素？
@@ -66,7 +66,12 @@ public class BluetoothOscilloscope extends Activity implements  Button.OnClickLi
 
 	private static final String MYTAG = "hkyudong01";
 
+	protected static final String USERNAME = "hkyudong";
+
+	
+
     // Layout Views
+	private TextView mfileStatus;
     private TextView mBTStatus;//运行状态TextView
     private TextView txtYshrink;//y周伸缩
     private TextView ch1_scale;//信号一，二的刻度间隔
@@ -115,6 +120,7 @@ public class BluetoothOscilloscope extends Activity implements  Button.OnClickLi
         setContentView(R.layout.main);
         
         mBTStatus = (TextView) findViewById(R.id.txt_btstatus);
+        mfileStatus = (TextView) findViewById(R.id.txt_filestatus);
 
         // Get local Bluetooth adapter
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -215,8 +221,14 @@ public class BluetoothOscilloscope extends Activity implements  Button.OnClickLi
 //				 String SDPATH = Environment.getExternalStorageDirectory().getPath();
 //				 String filepath = SDPATH + "//" + "lph.txt";
 				if (Environment.getExternalStorageState().equalsIgnoreCase(Environment.MEDIA_MOUNTED)) {
-					readOldFile = new ReadOldFile(BluetoothOscilloscope.this, mHandler, "lph.txt");
-			        readOldFile.start();
+//					readOldFile = new ReadOldFile(BluetoothOscilloscope.this, mHandler, "lph.txt");
+//			        readOldFile.start();
+					Intent filelistIntent = new Intent();
+					filelistIntent.setClass(BluetoothOscilloscope.this, FileListActivity.class);
+					filelistIntent.putExtra("username", USERNAME);
+					startActivityForResult(filelistIntent, REQUEST_CONNECT_FILE);
+				//	startActivity(filelistIntent);
+					
 				}else {
 					Toast.makeText(getApplicationContext(), "读取失败，sd卡不存在", Toast.LENGTH_LONG).show();
 				}
@@ -333,7 +345,7 @@ public class BluetoothOscilloscope extends Activity implements  Button.OnClickLi
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if (readOldFile != null) readOldFile.destroy();
+        if (readOldFile != null) {readOldFile.cancel();readOldFile.stop();}
         // Stop the Bluetooth RFCOMM services
         if (mRfcommClient != null) mRfcommClient.stop();
         // release screen being on
@@ -471,6 +483,16 @@ public class BluetoothOscilloscope extends Activity implements  Button.OnClickLi
                 Toast.makeText(this, R.string.bt_not_enabled_leaving, Toast.LENGTH_SHORT).show();
                 finish();
             }
+            break;
+        case REQUEST_CONNECT_FILE : 
+        	if (Activity.RESULT_OK == resultCode) {
+				String filepathString = data.getExtras().getString(FileListActivity.EXTRA_FILE_PATH);
+				Log.i(MYTAG, filepathString);
+				readOldFile = new ReadOldFile(BluetoothOscilloscope.this, mHandler, null,filepathString);
+			    readOldFile.start();
+			    mfileStatus.setText("已连接到文件："+data.getExtras().getString(FileListActivity.EXTRA_FILE_NAME));
+			    mfileStatus.setVisibility(View.VISIBLE);
+			}
         }
     }
 

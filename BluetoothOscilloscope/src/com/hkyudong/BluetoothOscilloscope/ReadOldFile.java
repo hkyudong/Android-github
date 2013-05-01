@@ -14,26 +14,35 @@ import android.util.Log;
 public class ReadOldFile extends Thread{
 	private static final String DIR = "WaveData";
 	private static final String MYTAG = "readoldfile";
+	private final String filepathString;
 	private final String filenameString;
 	private final Handler mHandler;
-	private Scanner mScanner;
+	private Scanner mScanner = null;
 	private boolean wait = true;
+	private File file = null;
 	
-	public ReadOldFile(Context context,Handler handler,String string) {
+	public ReadOldFile(Context context,Handler handler,String filename,String filepath) {
 		// TODO Auto-generated constructor stub
 		mHandler = handler;
-		filenameString = string;
+		filenameString = filename;
+		filepathString = filepath;
+		file = new File(filepathString);
 	}	
+	public ReadOldFile(Context context,Handler handler,String filename) {
+		// TODO Auto-generated constructor stub
+		mHandler = handler;
+		filenameString = filename;
+		filepathString = null;
+		file = new File(Environment.getExternalStorageDirectory().toString()+File.separator+DIR+File.separator+filenameString);
+		if (! file.getParentFile().exists()) {
+			file.getParentFile().mkdirs();
+		}
+	}
 	public void set_wait(boolean newwait) {
 		wait = newwait;
 	}
 	public void run() {
 		
-		int data;		
-		File file = new File(Environment.getExternalStorageDirectory().toString()+File.separator+DIR+File.separator+filenameString);
-		if (! file.getParentFile().exists()) {
-			file.getParentFile().mkdirs();
-		}
 		try {
 			mScanner = new Scanner(file).useDelimiter(",");
 			while (mScanner.hasNext()) {
@@ -58,9 +67,13 @@ public class ReadOldFile extends Thread{
 				mScanner.close();
 			}
 		}
-
 		
 //		mScanner.close();
+	}
+	public void cancel() {
+		if (null != mScanner) {
+			mScanner.close();
+		}
 	}
 }
 
