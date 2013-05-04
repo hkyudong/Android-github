@@ -20,6 +20,7 @@ import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.util.Log;
 
 /**
  * 给一个蓝牙地址 本类进行连接   BluetoothRfcommClient.connect(device)
@@ -244,7 +245,8 @@ public class BluetoothRfcommClient {
      * It handles all incoming and outgoing transmissions.
      */
     private class ConnectedThread extends Thread {
-        private final BluetoothSocket mmSocket;
+        private static final String MYTAG = "BluetoothRfcommClient";
+		private final BluetoothSocket mmSocket;
         private final InputStream mmInStream;
         private final OutputStream mmOutStream;
 
@@ -267,13 +269,20 @@ public class BluetoothRfcommClient {
             byte[] buffer = new byte[1024];
             int bytes;
             // Keep listening to the InputStream while connected
-            while (true) {
+            while (true) {//这里的true可以改为一个开关
                 try {
                     // Read from the InputStream
                     bytes = mmInStream.read(buffer);
+                    String dataString = "";
+                    for (int i = 0; i < bytes; i++) {
+                    	Log.i(MYTAG,Integer.toString(buffer[i]), null);
+						dataString = dataString+AsciiToChar(buffer[i]);
+					}                    
+                   // Log.i(MYTAG, "aaa:"+dataString, null);
                     // Send the obtained bytes to the UI Activity
-                    mHandler.obtainMessage(BluetoothOscilloscope.MESSAGE_READ, bytes, -1, buffer)
+                    mHandler.obtainMessage(BluetoothOscilloscope.MESSAGE_READ, bytes, -1, dataString)
                             .sendToTarget();
+                  //  dataString = "";
                 } catch (IOException e) {
                     //
                     connectionLost();
@@ -295,7 +304,11 @@ public class BluetoothRfcommClient {
                 //
             }
         }
-
+        public char AsciiToChar(int asci) {//ascii码转化为他所代表的字符
+        	char aaa = (char)Integer.parseInt(Integer.toString(asci));;
+        //	Log.i(MYTAG, Integer.toString(asci)+"---->"+aaa, null);
+			return (char)Integer.parseInt(Integer.toString(asci));
+		}
         public void cancel() {
             try {
                 mmSocket.close();
