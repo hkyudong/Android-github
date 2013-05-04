@@ -24,11 +24,11 @@ public class FileListActivity extends ListActivity {
 	public static final String EXTRA_FILE_NAME = "filename";
 	
 	
-	//private static final String DIR = "WaveData";	
+	private static final String DIR = "WaveData";	
 	private static final String MYTAG = "FileListActivity";	
     private List<String> items = null;//存放名称  
     private List<String> paths = null;//存放路径  
-    private String rootPath =Environment.getExternalStorageDirectory().toString()+File.separator+BluetoothOscilloscope.DIR+File.separator;  //"/";  
+    private String rootPath =Environment.getExternalStorageDirectory().toString()+File.separator+DIR+File.separator;  //"/";  
     private TextView tv;  
   
     @Override  

@@ -9,15 +9,6 @@
 package com.hkyudong.BluetoothOscilloscope;
 
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintStream;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
-import android.R.integer;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -54,11 +45,7 @@ public class BluetoothOscilloscope extends Activity implements  Button.OnClickLi
     // Key names received from the BluetoothRfcommClient Handler
     public static final String DEVICE_NAME = "device_name";
     public static final String TOAST = "toast";
-    public static final String DIR = "WaveData";
     
-    
-    private final String filepathString = Environment.getExternalStorageDirectory().toString()+File.separator+DIR+File.separator;
-    private String newfilepathString = null;
     // Intent request codes
     private static final int REQUEST_CONNECT_DEVICE = 1;
     private static final int REQUEST_ENABLE_BT = 2;
@@ -111,9 +98,6 @@ public class BluetoothOscilloscope extends Activity implements  Button.OnClickLi
     
     public WaveformView mWaveform = null;
     
-    private PrintStream fileoutPrintStream = null;
-    private String strNewFileName = null;
- //   private InputStream BTFileinpuStream = null;
 //    static String[] timebase = {"5us", "10us", "20us", "50us", "100us", "200us", "500us", "1ms", "2ms", "5ms", "10ms", "20ms", "50ms" };
 	static String[] ampscale = {"10mV", "20mV", "50mV", "100mV", "200mV", "500mV", "1V", "2V", "GND"};
 	static byte timebase_index = 5;//采样时间序号
@@ -151,24 +135,7 @@ public class BluetoothOscilloscope extends Activity implements  Button.OnClickLi
         PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
         this.mWakeLock = pm.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK, "My Tag"); 
         this.mWakeLock.acquire();
-        
-        //以下为建立一个存放数据的文件代码，请设置一个button来开关这个步骤        
-        SimpleDateFormat    formatter    =   new    SimpleDateFormat    ("yyyyMMdd-hhmmss");     
-        Date    curDate    =   new    Date(System.currentTimeMillis());//获取当前时间     
-        strNewFileName    =    formatter.format(curDate); 
-        newfilepathString = filepathString+strNewFileName+".txt";
-        File file = new File(newfilepathString);
-        Log.i(MYTAG, filepathString+strNewFileName+".txt");
-        if (! file.getParentFile().exists()) {//父文件夹不存在就建立一个
-			file.getParentFile().mkdirs();
-		}
-        try {
-        
-        fileoutPrintStream = new PrintStream(new FileOutputStream(file));
-		} catch (Exception e) {
-			// TODO: handle exception
-			 Log.i(MYTAG, "创建文件失败!");
-		}
+       
 		
     }
 
@@ -189,8 +156,6 @@ public class BluetoothOscilloscope extends Activity implements  Button.OnClickLi
     			a=30 + i%50;
 //    			Log.i(MYTAG,Integer.toString(a), null);
     			mWaveform.set_data(a);
-     			//fileoutPrintStream.print(a);
-				//fileoutPrintStream.print(",");
     		}
     		
         }
@@ -253,8 +218,6 @@ public class BluetoothOscilloscope extends Activity implements  Button.OnClickLi
 			@Override
 			public void onClick(View v) {
 				// TODO Auto-generated method stub
-				
-				clear();
 //				 String SDPATH = Environment.getExternalStorageDirectory().getPath();
 //				 String filepath = SDPATH + "//" + "lph.txt";
 				if (Environment.getExternalStorageState().equalsIgnoreCase(Environment.MEDIA_MOUNTED)) {
@@ -276,7 +239,6 @@ public class BluetoothOscilloscope extends Activity implements  Button.OnClickLi
         mConnectButton = (Button) findViewById(R.id.button_connect);
         mConnectButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View arg0) {
-				clear();
 				BTConnect();
 			}
 		});
@@ -354,17 +316,15 @@ public class BluetoothOscilloscope extends Activity implements  Button.OnClickLi
     					ADJ_POSITION, CHANNEL1, ch1_pos,
     					ADJ_POSITION, CHANNEL2, ch2_pos,
     					REQ_DATA}) );
-*/    			if (null !=readOldFile) {
-					readOldFile.set_wait(false);
+*/    			if (null !=readOldFile && Thread.State.RUNNABLE != readOldFile.getState()) {
+//					readOldFile.start();
 				};	
-				
+				readOldFile.set_wait(false);
     			bReady = true;
     		}else{
     			//readOldFile.cancle();
     			
-    			if (null !=readOldFile) {
-					readOldFile.set_wait(true);
-				};
+    			readOldFile.set_wait(true);
     			Log.i(MYTAG, "aaaaaaaa", null);
     			bReady = false;
     		}
@@ -385,25 +345,14 @@ public class BluetoothOscilloscope extends Activity implements  Button.OnClickLi
     @Override
     public void onDestroy() {
         super.onDestroy();
-        clear();
-        if (null != fileoutPrintStream) {//关闭输出文件流
-			fileoutPrintStream.close();
-		}
+        if (readOldFile != null) {readOldFile.cancel();readOldFile.stop();}
+        // Stop the Bluetooth RFCOMM services
+        if (mRfcommClient != null) mRfcommClient.stop();
         // release screen being on
         if (mWakeLock.isHeld()) { 
             mWakeLock.release();
         }
     }
-    /**
-     * 蓝牙和文件状态清零
-     * 结束前面已经存在的读文件线程和蓝牙线程
-     */
-    private void clear() {
-    	if (readOldFile != null) {readOldFile.set_wait(true);readOldFile.cancel();readOldFile = null;}
-        // Stop the Bluetooth RFCOMM services
-        if (mRfcommClient != null) {mRfcommClient.stop();}
-        run_buton.setChecked(false);
-	}
 
     /**
      * Sends a message.
@@ -451,32 +400,10 @@ public class BluetoothOscilloscope extends Activity implements  Button.OnClickLi
                 //mBTStatus.setText(writeMessage);
                 break;
             case MESSAGE_READ:
-            	//Log.i(MYTAG, "MESSAGE_READ", null);
-            	int raw, data_length;
-                String readBuf = (String) msg.obj;
+            	int raw, data_length, x;
+                byte[] readBuf = (byte[]) msg.obj;
                 data_length = msg.arg1;
-                Log.i(MYTAG, readBuf, null);
-                fileoutPrintStream.print(readBuf);
-                if (null == readOldFile) {
-					readOldFile = new ReadOldFile(BluetoothOscilloscope.this, mHandler, null,newfilepathString);
-					readOldFile.start();
-					mfileStatus.setText("已连接到文件："+strNewFileName);
-					mfileStatus.setVisibility(View.VISIBLE);
-				}
-                
-/*                String[] charsString = readBuf.split(","); 
-                for(int x=0; x<charsString.length; x++){
-                	fileoutPrintStream.print(charsString[x]);
-					fileoutPrintStream.print(",");
-//               	    raw = Integer.valueOf(charsString[x]);
-//                	mWaveform.set_data(raw);
-//                	Log.i(MYTAG, Integer.toString(raw), null);
-//                	if (true) {//设置是否保存的开关
-//    					fileoutPrintStream.print(raw);
-//    					fileoutPrintStream.print(",");
-//    				}
-                }
-                 	
+                for(x=0; x<data_length; x++){
                 	raw = UByte(readBuf[x]);
                 	if( raw>MAX_LEVEL ){
                 		if( raw==DATA_START ){
@@ -493,15 +420,14 @@ public class BluetoothOscilloscope extends Activity implements  Button.OnClickLi
                         		BluetoothOscilloscope.this.sendMessage( new String(new byte[] {REQ_DATA}) );//数据接收完毕，通知设备继续发送数据
                         	}
                         	break;
-                    	}                  	
+                    	}
                 	}
                 	else if( (bDataAvailable) && (dataIndex<(MAX_SAMPLES)) ){ // valid data有效的数据
                 		if((dataIndex++)%2==0) ch1_data[dataIndex1++] = raw;	// even data 偶数数据
 //                		else ch2_data[dataIndex2++] = raw;	// odd data 奇数数据
                 	}
-*/                  	
-                
-                
+                	
+                }
                 break;
                 
             //my
@@ -560,9 +486,9 @@ public class BluetoothOscilloscope extends Activity implements  Button.OnClickLi
             break;
         case REQUEST_CONNECT_FILE : 
         	if (Activity.RESULT_OK == resultCode) {
-				String oldfilepathString = data.getExtras().getString(FileListActivity.EXTRA_FILE_PATH);
-				Log.i(MYTAG, oldfilepathString);
-				readOldFile = new ReadOldFile(BluetoothOscilloscope.this, mHandler, null,oldfilepathString);
+				String filepathString = data.getExtras().getString(FileListActivity.EXTRA_FILE_PATH);
+				Log.i(MYTAG, filepathString);
+				readOldFile = new ReadOldFile(BluetoothOscilloscope.this, mHandler, null,filepathString);
 			    readOldFile.start();
 			    mfileStatus.setText("已连接到文件："+data.getExtras().getString(FileListActivity.EXTRA_FILE_NAME));
 			    mfileStatus.setVisibility(View.VISIBLE);

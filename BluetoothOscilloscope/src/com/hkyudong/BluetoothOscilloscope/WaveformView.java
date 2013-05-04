@@ -99,7 +99,7 @@ public class WaveformView extends SurfaceView implements SurfaceHolder.Callback{
 	}
 	public void set_data(int tempdata){
 	       
-//			plot_thread.setRunning(false);	
+			plot_thread.setRunning(false);	
 			int i = nowX;
 			if(i < WIDTH){
 				data[nowX] = HEIGHT-tempdata+1;
@@ -110,7 +110,7 @@ public class WaveformView extends SurfaceView implements SurfaceHolder.Callback{
 				}
 				Log.i(MYTAG, Integer.toString(nowX), null);
 			}
-//			plot_thread.setRunning(true);
+			plot_thread.setRunning(true);
 	}
 	
 	public void set_data(int[] tempdata){
