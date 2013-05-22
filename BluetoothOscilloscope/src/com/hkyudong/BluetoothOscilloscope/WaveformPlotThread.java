@@ -1,14 +1,7 @@
-/***************************************
- * 
- * Android Bluetooth Oscilloscope
- * yus	-	projectproto.blogspot.com
- * September 2010
- *  
- ***************************************/
-
 package com.hkyudong.BluetoothOscilloscope;
 
 import android.graphics.Canvas;
+import android.graphics.Rect;
 import android.view.SurfaceHolder;
 
 public class WaveformPlotThread extends Thread {

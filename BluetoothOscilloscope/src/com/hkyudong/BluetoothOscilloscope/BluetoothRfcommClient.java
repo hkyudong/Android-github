@@ -1,11 +1,3 @@
-/***************************************
- * 
- * Android Bluetooth Oscilloscope
- * yus	-	projectproto.blogspot.com
- * September 2010
- *  
- ***************************************/
-
 package com.hkyudong.BluetoothOscilloscope;
 
 import java.io.IOException;
@@ -20,6 +12,7 @@ import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.util.Log;
 
 /**
  * 给一个蓝牙地址 本类进行连接   BluetoothRfcommClient.connect(device)
@@ -44,6 +37,16 @@ public class BluetoothRfcommClient {
     public static final int STATE_CONNECTING = 2; // now initiating an outgoing connection
     public static final int STATE_CONNECTED = 3;  // now connected to a remote device
 
+	public boolean wait = false;
+	
+	
+	/**
+	 * 暂停设置
+	 * 
+	 */
+	public void set_wait(boolean newwait) {//暂停设置标志
+		wait = newwait;
+	}
     /**
      * Constructor. Prepares a new BluetoothChat session.
      * - context - The UI Activity Context
@@ -244,7 +247,8 @@ public class BluetoothRfcommClient {
      * It handles all incoming and outgoing transmissions.
      */
     private class ConnectedThread extends Thread {
-        private final BluetoothSocket mmSocket;
+        private static final String MYTAG = "BluetoothRfcommClient";
+		private final BluetoothSocket mmSocket;
         private final InputStream mmInStream;
         private final OutputStream mmOutStream;
 
@@ -262,18 +266,67 @@ public class BluetoothRfcommClient {
             mmInStream = tmpIn;
             mmOutStream = tmpOut;
         }
-
+        
         public void run() {
             byte[] buffer = new byte[1024];
             int bytes;
+            String dataString = "";
             // Keep listening to the InputStream while connected
-            while (true) {
+            while (true) {//这里的true可以改为一个开关
+            	if (wait) {
+    				try {
+    					sleep(10);
+    				} catch (InterruptedException e) {
+    					// TODO Auto-generated catch block
+    					e.printStackTrace();
+    				}
+    			}else{
+    				try {
+                    // Read from the InputStream
+    					bytes = mmInStream.read(buffer);                    
+    					for (int i = 0; i < bytes; i++) {
+    						Log.i(MYTAG,Integer.toString(buffer[i]), null);
+    							if (buffer[i]==44&& ""!=dataString) {
+    								//int sendint = Integer.parseInt(dataString);
+    								mHandler.obtainMessage(BluetoothOscilloscope.MESSAGE_READ, -1, -1, dataString)
+    								.sendToTarget();
+    								dataString = "";
+    							}else	dataString = dataString+AsciiToChar(buffer[i]);
+    					}                    
+    					// Log.i(MYTAG, "aaa:"+dataString, null);
+    					// Send the obtained bytes to the UI Activity
+    					// mHandler.obtainMessage(BluetoothOscilloscope.MESSAGE_READ, bytes, -1, dataString)
+    					//        .sendToTarget();
+    					// mHandler.obtainMessage(BluetoothOscilloscope.MESSAGE_READ, bytes, -1, buffer).sendToTarget();
+    					//  dataString = "";
+    				} catch (IOException e) {
+                    //
+    					connectionLost();
+    					break;
+    				}
+    			}
+            }
+        }
+
+/*        public void run() {
+            byte[] buffer = new byte[1024];
+            int bytes;
+            // Keep listening to the InputStream while connected
+            while (true) {//这里的true可以改为一个开关
                 try {
                     // Read from the InputStream
                     bytes = mmInStream.read(buffer);
+                    String dataString = "";
+                    for (int i = 0; i < bytes; i++) {
+                    	Log.i(MYTAG,Integer.toString(buffer[i]), null);
+						dataString = dataString+AsciiToChar(buffer[i]);
+					}                    
+                   // Log.i(MYTAG, "aaa:"+dataString, null);
                     // Send the obtained bytes to the UI Activity
-                    mHandler.obtainMessage(BluetoothOscilloscope.MESSAGE_READ, bytes, -1, buffer)
+                    mHandler.obtainMessage(BluetoothOscilloscope.MESSAGE_READ, bytes, -1, dataString)
                             .sendToTarget();
+                   // mHandler.obtainMessage(BluetoothOscilloscope.MESSAGE_READ, bytes, -1, buffer).sendToTarget();
+                  //  dataString = "";
                 } catch (IOException e) {
                     //
                     connectionLost();
@@ -281,7 +334,7 @@ public class BluetoothRfcommClient {
                 }
             }
         }
-
+*/
         /**
          * Write to the connected OutStream.
          */
@@ -295,7 +348,11 @@ public class BluetoothRfcommClient {
                 //
             }
         }
-
+        public char AsciiToChar(int asci) {//ascii码转化为他所代表的字符
+        //	char aaa = (char)Integer.parseInt(Integer.toString(asci));;
+        //	Log.i(MYTAG, Integer.toString(asci)+"---->"+aaa, null);
+			return (char)Integer.parseInt(Integer.toString(asci));
+		}
         public void cancel() {
             try {
                 mmSocket.close();

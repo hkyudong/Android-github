@@ -3,6 +3,7 @@
     android:orientation="vertical"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
+    android:background = "#6F6F91"
     >
     <TextView
 	android:id="@+id/txt_filestatus" 
@@ -33,26 +34,8 @@
     	<com.hkyudong.BluetoothOscilloscope.WaveformView 
     	android:id="@+id/WaveformArea"
     	android:layout_marginLeft="0pt"
-    	android:layout_height="100pt"
-    	android:layout_width="100pt"
-    	/>
-    	<TextView 
-    	android:id="@+id/txt_ch1pos"
-    	android:layout_alignTop="@id/WaveformArea"
-    	android:text="1-"
-    	android:textColor="#00ff00"
-    	android:layout_height="wrap_content"
-    	android:layout_width="wrap_content"
-    	android:layout_marginLeft="0pt"
-    	/>
-    	<TextView 
-    	android:id="@+id/txt_ch2pos"
-    	android:layout_alignTop="@id/WaveformArea"
-    	android:text="2-"
-    	android:textColor="#ff0000"
-    	android:layout_height="wrap_content"
-    	android:layout_width="wrap_content"
-    	android:layout_marginLeft="0pt"
+    	android:layout_height="215dp"
+    	android:layout_width="215dp"
     	/>
     </RelativeLayout>
      <LinearLayout
@@ -97,39 +80,11 @@
     	</RadioGroup>
     </LinearLayout>
     
-     <LinearLayout
-    android:id="@+id/linearlayout_button_changePos"
-    android:orientation="horizontal"
-    android:layout_below="@id/relayout_waveformArea"
-    android:layout_width="fill_parent"
-    android:layout_height="wrap_content"
-    >
-    	
-    <TextView 
-    	android:text="显示基准修改："
-    	android:layout_width="wrap_content"
-    	android:layout_height="wrap_content"
-    	android:layout_weight="2"
-    	/>
-    	<Button 
-    	android:id="@+id/btn_position_up"
-    	android:layout_height="wrap_content"
-    	android:layout_width="wrap_content"
-    	android:layout_weight="1"
-    	android:text="上移"
-    	/> 
-    	<Button 
-    	android:id="@+id/btn_position_down"
-    	android:layout_height="wrap_content"
-    	android:layout_width="wrap_content"
-    	android:layout_weight="1"
-    	android:text="下移"
-    	/>
-    </LinearLayout>
+   
   	<LinearLayout
     android:id="@+id/linearlayout_button_changeScale"
     android:orientation="horizontal"
-    android:layout_below="@id/linearlayout_button_changePos"
+    android:layout_below="@id/relayout_waveformArea"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
     >
@@ -176,22 +131,49 @@
     </LinearLayout>
     
     
-	    
-    <Button 
-    android:id="@+id/button_connect"
-    android:layout_below="@id/linearlayout_info_Yshrink"
-    android:layout_width="fill_parent"
-    android:layout_height="wrap_content"
-    android:text="连接蓝牙设备"
-    />
+	<LinearLayout
+	android:id="@+id/linearlayout_btAndFileChange"
+	android:layout_below="@id/linearlayout_info_Yshrink"
+	android:layout_width="fill_parent"
+	android:layout_height="wrap_content"	
+	>
+		<Button 
+    	android:id="@+id/button_connect"
+    	android:layout_weight="1"
+      	android:layout_width="fill_parent"
+    	android:layout_height="wrap_content"
+    	android:text="连接蓝牙设备"
+    	/>    
+    	<Button
+    	android:id="@+id/button_readfile"
+    	android:layout_weight="1"
+    	android:layout_width = "fill_parent"
+    	android:layout_height ="wrap_content"
+    	android:text="读取本地文件"
+    	/>
+	</LinearLayout>    
+	<LinearLayout
+	android:id="@+id/linearlayout_NET"
+	android:layout_below="@id/linearlayout_btAndFileChange"
+	android:layout_width="fill_parent"
+	android:layout_height="wrap_content"	
+	>
+		<Button 
+    	android:id="@+id/button_NET_sendfile"
+    	android:layout_weight="1"
+      	android:layout_width="fill_parent"
+    	android:layout_height="wrap_content"
+    	android:text="上传数据到网络"
+    	/>    
+    	<Button
+    	android:id="@+id/button_NET_getfile"
+    	android:layout_weight="1"
+    	android:layout_width = "fill_parent"
+    	android:layout_height ="wrap_content"
+    	android:text="读取网络数据"
+    	/>
+	</LinearLayout>  
     
-    <Button
-    android:id="@+id/button_readfile"
-    android:layout_below = "@id/button_connect"
-    android:layout_width = "fill_parent"
-    android:layout_height ="wrap_content"
-    android:text="读取历史文件"
-    />
     
     
     <LinearLayout

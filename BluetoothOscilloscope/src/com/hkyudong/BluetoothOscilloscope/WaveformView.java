@@ -1,11 +1,3 @@
-/***************************************
- * 
- * Android Bluetooth Oscilloscope
- * yus	-	projectproto.blogspot.com
- * September 2010
- *  
- ***************************************/
-
 package com.hkyudong.BluetoothOscilloscope;
 
 import java.util.Random;
@@ -97,9 +89,15 @@ public class WaveformView extends SurfaceView implements SurfaceHolder.Callback{
 		PlotPoints(canvas);
 		
 	}
+	public void clearScreen() {
+		for(int i=0; i<WIDTH; i++){
+			data[i] = 0;
+			nowX = 0;
+		}
+	}
 	public void set_data(int tempdata){
 	       
-			plot_thread.setRunning(false);	
+//			plot_thread.setRunning(false);	
 			int i = nowX;
 			if(i < WIDTH){
 				data[nowX] = HEIGHT-tempdata+1;
@@ -110,12 +108,12 @@ public class WaveformView extends SurfaceView implements SurfaceHolder.Callback{
 				}
 				Log.i(MYTAG, Integer.toString(nowX), null);
 			}
-			plot_thread.setRunning(true);
+//			plot_thread.setRunning(true);
 	}
 	
 	public void set_data(int[] tempdata){
 //       Log.i(MYTAG, tempdata.toString(), null);
-		plot_thread.setRunning(false);
+//		plot_thread.setRunning(false);
 		int i;
 		for(i = 0;i <tempdata.length;i++){
 			if(nowX <= WIDTH){
@@ -149,7 +147,7 @@ public class WaveformView extends SurfaceView implements SurfaceHolder.Callback{
 			x++;
 		}
 */		
-		plot_thread.setRunning(true);
+//		plot_thread.setRunning(true);
 	}
 	
 	public void PlotPoints(Canvas canvas){
