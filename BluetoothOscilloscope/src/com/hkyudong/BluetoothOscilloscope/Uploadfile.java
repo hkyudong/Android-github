@@ -7,6 +7,7 @@ import java.io.FileInputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import android.R.string;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
@@ -17,9 +18,11 @@ import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 
 public class Uploadfile extends Activity {
+	protected static final int REQUEST_SELECTFILE = 1;
 	/** Called when the activity is first created. */
 	/**
 	 * Upload file to web server with progress status, client: android;
@@ -30,6 +33,9 @@ public class Uploadfile extends Activity {
 	private TextView mtv2 = null;
 	private Button bupload = null;
 	private Button backbtn = null;
+	private Button selectfileButton = null;
+	private Button changeNameButton = null;
+	private String userNameString = "temp";
 
 	private String uploadFilepath = null;
 	private String actionUrl = "http://192.168.1.223/electrocardiogram/uploadfile.php";
@@ -43,6 +49,7 @@ public class Uploadfile extends Activity {
 		Intent newintent=getIntent();
 		Bundle bundle=newintent.getExtras();
 		uploadFilepath = bundle.getString("filepath");
+		userNameString = bundle.getString("username");
 		
 		mtv1 = (TextView) findViewById(R.id.txt_filepath);
 		mtv1.setText("文件路径：\n" + uploadFilepath);
@@ -54,8 +61,18 @@ public class Uploadfile extends Activity {
 			@Override
 			public void onClick(View v) {
 				// TODO Auto-generated method stub
-				FileUploadTask fileuploadtask = new FileUploadTask();
-				fileuploadtask.execute();
+				if (uploadFilepath == null) {
+					new AlertDialog.Builder(Uploadfile.this)
+					.setTitle("提示：")
+					.setIcon(android.R.drawable.ic_delete)
+					.setMessage("未选择文件")
+					.setNegativeButton("确定", null)
+					.show();					
+				}else {
+					FileUploadTask fileuploadtask = new FileUploadTask();
+					fileuploadtask.execute();
+				}
+				
 			}
 		});
 		backbtn = (Button) findViewById(R.id.btn_uploadback);
@@ -69,17 +86,54 @@ public class Uploadfile extends Activity {
 				finish();
 			}
 		});
-	}
+		
+		selectfileButton = (Button) findViewById(R.id.btn_upload_changeFile);
+		selectfileButton.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				Intent selectIntent = new Intent();
+				selectIntent.setClass(Uploadfile.this, FileListActivity.class);
+				selectIntent.putExtra("username", "");
+				startActivityForResult(selectIntent, REQUEST_SELECTFILE);
+			}
+		});
+		
+		changeNameButton = (Button) findViewById(R.id.btn_upload_changeName);
+		changeNameButton.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				if (uploadFilepath == null) {
+					new AlertDialog.Builder(Uploadfile.this)
+					.setTitle("提示：")
+					.setIcon(android.R.drawable.ic_delete)
+					.setMessage("未选择文件")
+					.setNegativeButton("确定", null)
+					.show();					
+				}else {
+					 final EditText inputServer = new EditText(Uploadfile.this);
+				        new AlertDialog.Builder(Uploadfile.this).setTitle("请输入新文件名：")
+				        .setIcon(android.R.drawable.ic_dialog_info)
+				        .setView(inputServer)
+				        .setNegativeButton("取消", null)
+				        .setPositiveButton("确定", new DialogInterface.OnClickListener() {
 
-	// show Dialog method
-	private void showDialog(String mess) {
-		new AlertDialog.Builder(Uploadfile.this).setTitle("Message")
-				.setMessage(mess)
-				.setNegativeButton("确定", new DialogInterface.OnClickListener() {
-					@Override
-					public void onClick(DialogInterface dialog, int which) {
-					}
-				}).show();
+				            public void onClick(DialogInterface dialog, int which) {
+				               //inputServer.getText().toString();
+				               File renameFile = new File(uploadFilepath);
+								String filepathString = renameFile.getParent()+"/";
+								uploadFilepath=filepathString+inputServer.getText().toString()+".txt";
+								renameFile.renameTo(new File(uploadFilepath));
+								mtv1.setText(uploadFilepath);
+				             }
+				        }).show();
+					
+				}
+			}
+		});
 	}
 
 	class FileUploadTask extends AsyncTask<Object, Integer, Void> {
@@ -89,14 +143,14 @@ public class Uploadfile extends Activity {
 		DataOutputStream outputStream = null;
 		DataInputStream inputStream = null;
 		//the file path to upload
-		String pathToOurFile = uploadFilepath;
+		//String pathToOurFile = uploadFilepath;
 		//the server address to process uploaded file
-		String urlServer = actionUrl;
+		//String urlServer = actionUrl;
 		String lineEnd = "\r\n";
 		String twoHyphens = "--";
 		String boundary = "*****";
 
-		File uploadFile = new File(pathToOurFile);
+		File uploadFile = new File(uploadFilepath);
 		long totalSize = uploadFile.length(); // Get size of file, bytes
 
 		@Override
@@ -120,9 +174,9 @@ public class Uploadfile extends Activity {
 
 			try {
 				FileInputStream fileInputStream = new FileInputStream(new File(
-						pathToOurFile));
+						uploadFilepath));
 
-				URL url = new URL(urlServer);
+				URL url = new URL(actionUrl+"?user="+userNameString);
 				connection = (HttpURLConnection) url.openConnection();
 
 				// Set size of every block for post
@@ -145,7 +199,7 @@ public class Uploadfile extends Activity {
 				outputStream.writeBytes(twoHyphens + boundary + lineEnd);
 				outputStream
 						.writeBytes("Content-Disposition: form-data; name=\"uploadedfile\";filename=\""
-								+ pathToOurFile + "\"" + lineEnd);
+								+ uploadFilepath + "\"" + lineEnd);
 				outputStream.writeBytes(lineEnd);
 
 				bytesAvailable = fileInputStream.available();
@@ -219,4 +273,24 @@ public class Uploadfile extends Activity {
 		}
 
 	}
+
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		// TODO Auto-generated method stub
+		switch (requestCode) {
+		case REQUEST_SELECTFILE:
+			if (Activity.RESULT_OK == resultCode) {
+				uploadFilepath = data.getExtras().getString(FileListActivity.EXTRA_FILE_PATH);
+				mtv1.setText("文件路径：\n" + uploadFilepath);
+			}
+			
+			break;
+		default:
+			
+			break;
+		
+		};
+	}
+	
+	
 }

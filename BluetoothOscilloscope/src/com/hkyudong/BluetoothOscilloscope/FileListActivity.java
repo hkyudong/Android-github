@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.R.string;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ListActivity;
@@ -23,21 +24,27 @@ public class FileListActivity extends ListActivity {
 	public static final String EXTRA_FILE_PATH = "filepath";
 	public static final String EXTRA_FILE_NAME = "filename";
 	
-	
 	//private static final String DIR = "WaveData";	
 	private static final String MYTAG = "FileListActivity";	
     private List<String> items = null;//存放名称  
     private List<String> paths = null;//存放路径  
     private String rootPath =Environment.getExternalStorageDirectory().toString()+File.separator+BluetoothOscilloscope.DIR+File.separator;  //"/";  
     private TextView tv;  
-  
+    private String usernameString = "";
     @Override  
     public void onCreate(Bundle savedInstanceState) {  
         super.onCreate(savedInstanceState);  
         requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
         setContentView(R.layout.file_list);  
+        
+        Intent getusernameIntent = getIntent();
+        Bundle bundle = getusernameIntent.getExtras();
+        usernameString = bundle.getString("username");
+        if ("" != usernameString) {
+			usernameString += File.separator;
+		}
         tv = (TextView) this.findViewById(R.id.TextView_file);  
-        this.getFileDir(rootPath);//获取rootPath目录下的文件.  
+        this.getFileDir(rootPath+usernameString);//获取rootPath目录下的文件.  
     }  
  
     public void getFileDir(String filePath) {  
@@ -45,7 +52,10 @@ public class FileListActivity extends ListActivity {
             this.tv.setText("当前路径:"+filePath);// 设置当前所在路径  
             items = new ArrayList<String>();  
             paths = new ArrayList<String>();  
-            File f = new File(filePath);  
+            File f = new File(filePath); 
+            if (!f.exists()) {
+				f.mkdirs();
+			}
             File[] files = f.listFiles();// 列出所有文件  
             // 如果不是根目录,则列出返回根目录和上一目录选项  
             if (!filePath.equals("/")) {  

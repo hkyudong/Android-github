@@ -10,6 +10,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import android.R.integer;
+import android.R.string;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
@@ -23,6 +24,8 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.PowerManager;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.view.View.OnClickListener;
@@ -49,6 +52,7 @@ public class BluetoothOscilloscope extends Activity implements  Button.OnClickLi
     public static final String DEVICE_NAME = "device_name";
     public static final String TOAST = "toast";
     public static final String DIR = "WaveData";
+    private String UserName = null;
     
     
     private final String filepathString = Environment.getExternalStorageDirectory().toString()+File.separator+DIR+File.separator;
@@ -73,7 +77,7 @@ public class BluetoothOscilloscope extends Activity implements  Button.OnClickLi
 
 	private static final String MYTAG = "hkyudong01";
 
-	protected static final String USERNAME = "hkyudong";
+	//protected static final String USERNAME = "hkyudong";
 
 	
 
@@ -130,6 +134,10 @@ public class BluetoothOscilloscope extends Activity implements  Button.OnClickLi
         // Set up the window layout
         requestWindowFeature(Window.FEATURE_NO_TITLE);        
         setContentView(R.layout.main);
+        
+        Intent getuserIntent  =getIntent();
+        Bundle bundle = getuserIntent.getExtras();
+        UserName = bundle.getString("username");
         
         mBTStatus = (TextView) findViewById(R.id.txt_btstatus);
         mfileStatus = (TextView) findViewById(R.id.txt_filestatus);
@@ -258,7 +266,7 @@ public class BluetoothOscilloscope extends Activity implements  Button.OnClickLi
 //			        readOldFile.start();
 					Intent filelistIntent = new Intent();
 					filelistIntent.setClass(BluetoothOscilloscope.this, FileListActivity.class);
-					filelistIntent.putExtra("username", USERNAME);
+					filelistIntent.putExtra("username", UserName);
 					startActivityForResult(filelistIntent, REQUEST_CONNECT_FILE);
 				//	startActivity(filelistIntent);
 					
@@ -290,6 +298,7 @@ public class BluetoothOscilloscope extends Activity implements  Button.OnClickLi
 				Intent uploadIntent = new Intent();
 				uploadIntent.setClass(BluetoothOscilloscope.this, Uploadfile.class);
 				uploadIntent.putExtra("filepath", newfilepathString);
+				uploadIntent.putExtra("username", UserName);
 				startActivityForResult(uploadIntent,222);
 			}
 		});
@@ -464,12 +473,17 @@ public class BluetoothOscilloscope extends Activity implements  Button.OnClickLi
                 	SimpleDateFormat    formatter    =   new    SimpleDateFormat    ("yyyyMMdd-hhmmss");     
                 	Date    curDate    =   new    Date(System.currentTimeMillis());//获取当前时间     
                 	strNewFileName    =    formatter.format(curDate); 
-                	newfilepathString = filepathString+strNewFileName+".txt";
+                	newfilepathString = filepathString+UserName+File.separator+strNewFileName+".txt";
                 	File file = new File(newfilepathString);
                 	Log.i(MYTAG, filepathString+strNewFileName+".txt");
-                	if (! file.getParentFile().exists()) {//父文件夹不存在就建立一个
+                	if (! file.getParentFile().getParentFile().exists()) {//父文件夹不存在就建立一个
+          			file.getParentFile().getParentFile().mkdirs();
           			file.getParentFile().mkdirs();
-          			}
+          			}else {
+          				if (! file.getParentFile().exists()) {//父文件夹不存在就建立一个
+                  			file.getParentFile().mkdirs();
+                  			}
+					}
                 	try {
                   
                 		fileoutPrintStream = new PrintStream(new FileOutputStream(file));
@@ -650,5 +664,39 @@ public class BluetoothOscilloscope extends Activity implements  Button.OnClickLi
     	    }).show(); 
     	// super.onBackPressed(); 
     	   } 
+     /**
+      * 选项菜单
+      */
 
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		// TODO Auto-generated method stub
+		menu.add(Menu.NONE, Menu.FIRST+1, 1, "关于软件");
+		menu.add(Menu.NONE, Menu.FIRST+2, 2, " 退出");
+		return true;
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		// TODO Auto-generated method stub
+		
+		switch (item.getItemId()) {
+		case Menu.FIRST+1:
+			new AlertDialog.Builder(this).setTitle("关于心电监护系统") 
+    	    .setIcon(android.R.drawable.ic_dialog_info) 
+    	    .setMessage("西电国创项目成员：\n董晓宁，张金昌，于东")
+    	    .setNegativeButton("确定",null)
+    	    .show();
+			break;
+		case Menu.FIRST+2:
+			clear();
+			BluetoothOscilloscope.this.finish();
+			break;	
+
+		default:
+			break;
+		}
+		return false;
+	}
+   
 }
