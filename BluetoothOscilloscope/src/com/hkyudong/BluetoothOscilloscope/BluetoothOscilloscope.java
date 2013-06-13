@@ -85,17 +85,19 @@ public class BluetoothOscilloscope extends Activity implements  Button.OnClickLi
 	private TextView mfileStatus;
     private TextView mBTStatus;//运行状态TextView
     private TextView txtYshrink;//y周伸缩
-    private TextView ch1_scale;//信号一，二的刻度间隔
-    private TextView ch1pos_label;//信号一，二在画布上的上下位置
-    private RadioButton rb1;//信号一，二选择单选框
+    private TextView txtusername;//信号一，二的刻度间隔
+  //  private TextView ch1pos_label;//信号一，二在画布上的上下位置
+ //   private RadioButton rb1;//信号一，二选择单选框
 //    private Button timebase_inc, timebase_dec;
     private Button btn_scale_up, btn_scale_down;
-    private Button btn_pos_up, btn_pos_down;//pos位置
     private Button mConnectButton;//连接button
     
     private Button readfileButton;
     private Button uploadfileButton;
     private Button downloadButton;
+    private Button closebtButton;
+    private Button clearScreenButton;
+    
     private ToggleButton run_buton;//运行状态ToggleButton
     
     // Name of the connected device
@@ -141,7 +143,12 @@ public class BluetoothOscilloscope extends Activity implements  Button.OnClickLi
         
         mBTStatus = (TextView) findViewById(R.id.txt_btstatus);
         mfileStatus = (TextView) findViewById(R.id.txt_filestatus);
-
+        txtusername = (TextView)findViewById(R.id.txt_username);
+        if (UserName == "temp") {
+			txtusername.setText("匿名用户");
+		}else {
+			txtusername.setText(UserName);
+		}
         // Get local Bluetooth adapter
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
@@ -187,15 +194,15 @@ public class BluetoothOscilloscope extends Activity implements  Button.OnClickLi
         // Otherwise, setup the Oscillosope session
         } else {
             if (mRfcommClient == null) setupOscilloscope();
-            int i;
-    		for(i=0; i<320; i++){
-    			int a ;
-    			a=30 + i%50;
-//    			Log.i(MYTAG,Integer.toString(a), null);
-    			mWaveform.set_data(a);
-     			//fileoutPrintStream.print(a);
-				//fileoutPrintStream.print(",");
-    		}
+//            int i;
+//    		for(i=0; i<320; i++){
+//    			int a ;
+//    			a=30 + i%50;
+////    			Log.i(MYTAG,Integer.toString(a), null);
+//    			mWaveform.set_data(a);
+//     			//fileoutPrintStream.print(a);
+//				//fileoutPrintStream.print(",");
+//    		}
     		
         }
     }
@@ -224,15 +231,15 @@ public class BluetoothOscilloscope extends Activity implements  Button.OnClickLi
 //        timebase_dec = (Button) findViewById(R.id.btn_timebase_decrease);
 //        timebase_inc.setOnClickListener(this);
 //        timebase_dec.setOnClickListener(this);
-        
+ 
         run_buton = (ToggleButton) findViewById(R.id.tbtn_runtoggle);
         run_buton.setOnClickListener(this);
-        rb1 = (RadioButton)findViewById(R.id.rbtn_ch1);
+       // rb1 = (RadioButton)findViewById(R.id.rbtn_ch1);
 //        rb2 = (RadioButton)findViewById(R.id.rbtn_ch2);
         
-        ch1_scale = (TextView) findViewById(R.id.txt_ch1_scale);
+       // ch1_scale = (TextView) findViewById(R.id.txt_ch1_scale);
 //        ch2_scale = (TextView) findViewById(R.id.txt_ch2_scale);
-        ch1_scale.setText(ampscale[ch1_index]);
+        //ch1_scale.setText(ampscale[ch1_index]);
 //        ch2_scale.setText(ampscale[ch2_index]);
         
         btn_scale_up = (Button) findViewById(R.id.btn_scale_increase);
@@ -302,11 +309,32 @@ public class BluetoothOscilloscope extends Activity implements  Button.OnClickLi
 				startActivityForResult(uploadIntent,222);
 			}
 		});
-
+        
+        closebtButton = (Button)findViewById(R.id.button_closebt);
+        closebtButton.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				
+				// TODO Auto-generated method stub
+				 if (mRfcommClient != null) {mRfcommClient.stop(); run_buton.setChecked(false);}
+				 
+			}
+		});
+        clearScreenButton = (Button)findViewById(R.id.btn_ClearScreen);
+        clearScreenButton.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				mWaveform.clearScreen();
+			}
+		});
         // Initialize the BluetoothRfcommClient to perform bluetooth connections
         mRfcommClient = new BluetoothRfcommClient(this, mHandler);
         
         mWaveform = (WaveformView)findViewById(R.id.WaveformArea);
+        
         
     }
     
@@ -338,6 +366,7 @@ public class BluetoothOscilloscope extends Activity implements  Button.OnClickLi
     	case R.id.btn_scale_increase :
     		if(1 < Yshrink){
     			Yshrink--;
+    			mWaveform.set_Yshrink(Yshrink);
     			txtYshrink.setText(Integer.toString(Yshrink));
     		}
 /*    		else if(rb2.isChecked() && (ch2_index>0)){
@@ -348,6 +377,7 @@ public class BluetoothOscilloscope extends Activity implements  Button.OnClickLi
     	case R.id.btn_scale_decrease :
     		if(50 > Yshrink){
     			Yshrink++;
+    			mWaveform.set_Yshrink(Yshrink);
     			txtYshrink.setText(Integer.toString(Yshrink));
     		}
 /*    		else if(rb2.isChecked() && (ch2_index<(ampscale.length-1))){
@@ -518,8 +548,8 @@ public class BluetoothOscilloscope extends Activity implements  Button.OnClickLi
                 Log.i(MYTAG, Integer.toString(readBufint), null);
                 fileoutPrintStream.print(readBufint);
                 fileoutPrintStream.print(",");
-                mWaveform.set_data(readBufint/Yshrink);                
-                Log.i(MYTAG, Integer.toString(readBufint/Yshrink), null);
+                mWaveform.set_data(readBufint);                
+                Log.i(MYTAG, Integer.toString(readBufint), null);
 /*                 if (null == readOldFile) {
 					readOldFile = new ReadOldFile(BluetoothOscilloscope.this, mHandler, null,newfilepathString);
 					readOldFile.start();
@@ -573,7 +603,7 @@ public class BluetoothOscilloscope extends Activity implements  Button.OnClickLi
             	int readdata;
             	readdata = msg.arg1;
  //           	Log.i(MYTAG, Integer.toString(readdata), null);
-            	mWaveform.set_data(readdata/Yshrink);            	
+            	mWaveform.set_data(readdata);            	
             	break;
             	
             case MESSAGE_DEVICE_NAME:
@@ -684,7 +714,7 @@ public class BluetoothOscilloscope extends Activity implements  Button.OnClickLi
 		case Menu.FIRST+1:
 			new AlertDialog.Builder(this).setTitle("关于心电监护系统") 
     	    .setIcon(android.R.drawable.ic_dialog_info) 
-    	    .setMessage("西电国创项目成员：\n董晓宁，张金昌，于东")
+    	    .setMessage("西电国创项目成员：\n董晓宁，张金昌，于东\nSoft Design By 于东")
     	    .setNegativeButton("确定",null)
     	    .show();
 			break;

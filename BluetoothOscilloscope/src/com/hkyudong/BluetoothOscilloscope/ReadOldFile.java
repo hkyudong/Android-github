@@ -44,7 +44,7 @@ public class ReadOldFile extends Thread{
 		wait = newwait;
 	}
 	public void run() {
-		try {
+/*		try {
 			mScanner = new Scanner(new FileInputStream(file)).useDelimiter(",");//已逗号作为整型数据切分标准			
 		} catch (FileNotFoundException e) {
 				// TODO Auto-generated catch block
@@ -70,8 +70,8 @@ public class ReadOldFile extends Thread{
 			Log.i(MYTAG,mScanner.toString(), null);
 			//Log.i(MYTAG, "while (true) still running", null);
 		}
-		
-/*		try {
+*/		
+		try {
 			mScanner = new Scanner(file).useDelimiter(",");//已逗号作为整型数据切分标准			
 			while (mScanner.hasNext()) {
 				while (wait) {//判断是否暂停
@@ -84,7 +84,7 @@ public class ReadOldFile extends Thread{
 				}
 				int data1;
 				data1 = mScanner.nextInt();
-				Log.i(MYTAG, Integer.toString(data1), null);
+				//Log.i(MYTAG, Integer.toString(data1), null);
 				mHandler.obtainMessage(BluetoothOscilloscope.FILE_READ, data1,-1).sendToTarget();
 			}
 		} catch (FileNotFoundException e) {
@@ -95,10 +95,10 @@ public class ReadOldFile extends Thread{
 				mScanner.close();//关闭文件
 			}
 		}
-*/		
+		
 //		mScanner.close();
 	}
-	public void cancel() {
+/*	public void cancel() {
 		//cancel = true;
 		if (null != mScanner) {
 			//this.set_wait(true);
@@ -107,5 +107,6 @@ public class ReadOldFile extends Thread{
 			
 		}
 	}
+*/
 }
 

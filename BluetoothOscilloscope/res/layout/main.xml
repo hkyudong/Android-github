@@ -40,44 +40,32 @@
     </RelativeLayout>
      <LinearLayout
     android:id="@+id/linearlayout_info_changeRadioButton"
-    android:orientation="horizontal"
+    android:orientation="vertical"
     android:layout_toRightOf="@id/relayout_waveformArea"
     android:layout_alignTop="@id/relayout_waveformArea"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     >
-    	<RadioGroup
-    	android:layout_width="fill_parent"
+    	<TextView 
     	android:layout_height="wrap_content"
-    	android:orientation="vertical"
-    	android:checkedButton="@+id/rbtn_ch1"
-    	>
-    		<RadioButton 
-    		android:id="@+id/rbtn_ch1"
-    		android:layout_height="wrap_content"
-    		android:layout_width="wrap_content"
-    		android:layout_weight="1"
-    		/>
-    		<TextView 
-    		android:id="@+id/txt_ch1_scale"
-    		android:layout_height="wrap_content"
-    		android:layout_width="wrap_content"
-    		android:layout_weight="1"
-    		/>
-    		
-    		<RadioButton 
-    		android:id="@+id/rbtn_ch2"
-    		android:layout_height="wrap_content"
-    		android:layout_width="wrap_content"
-    		android:layout_weight="1"
-    		/> 
-    		<TextView 
-    		android:id="@+id/txt_ch2_scale"
-    		android:layout_height="wrap_content"
-    		android:layout_width="wrap_content"
-    		android:layout_weight="1"
-    		/>   	
-    	</RadioGroup>
+    	android:layout_width="wrap_content"
+    	android:textSize="30px"
+    	android:text="当前用户："
+    	/>
+    	<TextView 
+    	android:id="@+id/txt_username"
+    	android:layout_height="wrap_content"
+    	android:layout_width="wrap_content"
+    	android:textSize="30px"
+    	android:textColor="#FF0000"
+    	/>
+    	<Button
+    	android:id="@+id/btn_ClearScreen"
+    	android:layout_width="wrap_content"
+    	android:layout_height="wrap_content"
+    	android:text="打扫显示屏"
+    	/>
+    	
     </LinearLayout>
     
    
@@ -142,15 +130,16 @@
     	android:layout_weight="1"
       	android:layout_width="fill_parent"
     	android:layout_height="wrap_content"
-    	android:text="连接蓝牙设备"
-    	/>    
+    	android:text="连接设备"
+    	/>
     	<Button
-    	android:id="@+id/button_readfile"
+    	android:id="@+id/button_closebt"
     	android:layout_weight="1"
     	android:layout_width = "fill_parent"
     	android:layout_height ="wrap_content"
-    	android:text="读取本地文件"
-    	/>
+    	android:text="断开与硬件的连接"
+    	/>    
+    	
 	</LinearLayout>    
 	<LinearLayout
 	android:id="@+id/linearlayout_NET"
@@ -158,12 +147,19 @@
 	android:layout_width="fill_parent"
 	android:layout_height="wrap_content"	
 	>
+		<Button
+    	android:id="@+id/button_readfile"
+    	android:layout_weight="1"
+    	android:layout_width = "fill_parent"
+    	android:layout_height ="wrap_content"
+    	android:text="读取本地文件"
+    	/>
 		<Button 
     	android:id="@+id/button_NET_sendfile"
     	android:layout_weight="1"
       	android:layout_width="fill_parent"
     	android:layout_height="wrap_content"
-    	android:text="上传数据到网络"
+    	android:text="上传数据"
     	/>    
     	<Button
     	android:id="@+id/button_NET_getfile"

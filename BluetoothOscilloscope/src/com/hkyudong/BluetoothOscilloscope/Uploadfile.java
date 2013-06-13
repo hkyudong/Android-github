@@ -38,7 +38,7 @@ public class Uploadfile extends Activity {
 	private String userNameString = "temp";
 
 	private String uploadFilepath = null;
-	private String actionUrl = "http://192.168.1.223/electrocardiogram/uploadfile.php";
+	private String actionUrl = "http://192.168.0.101/electrocardiogram/uploadfile.php";
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {

@@ -23,6 +23,7 @@ public class WaveformView extends SurfaceView implements SurfaceHolder.Callback{
 	
 	
 	private int nowX = 0;
+	private int Yshrink=1;
 	private static int[]  data = new int[WIDTH];
 
 //	private static int ch1_pos = 120, ch2_pos = 200;
@@ -95,12 +96,18 @@ public class WaveformView extends SurfaceView implements SurfaceHolder.Callback{
 			nowX = 0;
 		}
 	}
+	public void set_Yshrink(int shrink) {
+		Yshrink = shrink;
+	}
+	private int controlHeight(int tempdata) {
+		return HEIGHT-tempdata+1;
+	}
 	public void set_data(int tempdata){
 	       
 //			plot_thread.setRunning(false);	
 			int i = nowX;
 			if(i < WIDTH){
-				data[nowX] = HEIGHT-tempdata+1;
+				data[nowX] = tempdata;
 //				Log.i(MYTAG, Integer.toString(data[nowX]), null);
 				nowX++;
 				if (WIDTH == nowX) {
@@ -117,7 +124,7 @@ public class WaveformView extends SurfaceView implements SurfaceHolder.Callback{
 		int i;
 		for(i = 0;i <tempdata.length;i++){
 			if(nowX <= WIDTH){
-				data[nowX] = HEIGHT-tempdata[i]+1;
+				data[nowX] = tempdata[i];
 				nowX++;
 			}else {
 //				plot_thread.setRunning(true);
@@ -184,7 +191,7 @@ public class WaveformView extends SurfaceView implements SurfaceHolder.Callback{
 //		Log.i(MYTAG, "111", null);
 		// plot data
 		for(int x=0; x<(WIDTH-1); x++){			
-			canvas.drawLine(x+1, data[x], x+2, data[x+1], line_paint);
+			canvas.drawLine(x+1, controlHeight(data[x]/Yshrink), x+2, controlHeight(data[x+1]/Yshrink), line_paint);
 //			canvas.drawLine(x+1, ch1_data[x], x+2, ch1_data[x+1], ch1_color);
 //			Log.i(MYTAG, Integer.toString(data[x]), null);
 		}
