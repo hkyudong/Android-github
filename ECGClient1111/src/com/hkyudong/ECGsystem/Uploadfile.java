@@ -7,6 +7,7 @@ import java.io.FileInputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import android.R.string;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
@@ -22,6 +23,11 @@ import android.widget.TextView;
 
 public class Uploadfile extends Activity {
 	protected static final int REQUEST_SELECTFILE = 1;
+	/** Called when the activity is first created. */
+	/**
+	 * Upload file to web server with progress status, client: android;
+	 * server:php
+	 * **/
 
 	private TextView mtv1 = null;
 	private TextView mtv2 = null;
@@ -32,7 +38,7 @@ public class Uploadfile extends Activity {
 	private String userNameString = "temp";
 
 	private String uploadFilepath = null;
-	private String actionUrl = "http://192.168.0.114/electrocardiogram/uploadfile.php";
+	private String actionUrl = "http://192.168.0.101/electrocardiogram/uploadfile.php";
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -136,8 +142,10 @@ public class Uploadfile extends Activity {
 		HttpURLConnection connection = null;
 		DataOutputStream outputStream = null;
 		DataInputStream inputStream = null;
-	
-		
+		//the file path to upload
+		//String pathToOurFile = uploadFilepath;
+		//the server address to process uploaded file
+		//String urlServer = actionUrl;
 		String lineEnd = "\r\n";
 		String twoHyphens = "--";
 		String boundary = "*****";
@@ -216,7 +224,24 @@ public class Uploadfile extends Activity {
 						+ lineEnd);
 				publishProgress(100);
 
+				// Responses from the server (code and message)
+				int serverResponseCode = connection.getResponseCode();
+				String serverResponseMessage = connection.getResponseMessage();
 
+				/* 将Response显示于Dialog */
+				// Toast toast = Toast.makeText(UploadtestActivity.this, ""
+				// + serverResponseMessage.toString().trim(),
+				// Toast.LENGTH_LONG);
+				// showDialog(serverResponseMessage.toString().trim());
+				/* 取得Response内容 */
+				// InputStream is = connection.getInputStream();
+				// int ch;
+				// StringBuffer sbf = new StringBuffer();
+				// while ((ch = is.read()) != -1) {
+				// sbf.append((char) ch);
+				// }
+				//
+				// showDialog(sbf.toString().trim());
 
 				fileInputStream.close();
 				outputStream.flush();

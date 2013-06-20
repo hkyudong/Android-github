@@ -1,10 +1,11 @@
 package com.hkyudong.ECGsystem;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.Scanner;
 
-
+import android.app.Activity;
 import android.content.Context;
 import android.os.Environment;
 import android.os.Handler;
@@ -19,6 +20,8 @@ public class ReadOldFile extends Thread{
 	private Scanner mScanner = null;
 	private boolean wait = true;
 	private File file = null;
+	//private boolean cancel = false;
+	private int data1 = 0;
 	
 	public ReadOldFile(Context context,Handler handler,String filename,String filepath) {//给定文件的绝对路径时使用的构造函数
 		// TODO Auto-generated constructor stub

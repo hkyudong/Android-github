@@ -2,6 +2,7 @@ package com.hkyudong.ECGsystem;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.UUID;
 
 import android.bluetooth.BluetoothAdapter;
@@ -47,7 +48,9 @@ public class BluetoothRfcommClient {
 		wait = newwait;
 	}
     /**
-     *构造函数
+     * Constructor. Prepares a new BluetoothChat session.
+     * - context - The UI Activity Context
+     * - handler - A Handler to send messages back to the UI Activity
      */
     public BluetoothRfcommClient(Context context, Handler handler) {
         mAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -56,7 +59,7 @@ public class BluetoothRfcommClient {
     }
 
     /**
-     * 设置状态
+     * Set the current state o
      * */
     private synchronized void setState(int state) {
         mState = state;
@@ -66,14 +69,13 @@ public class BluetoothRfcommClient {
     }
 
     /**
-     * 返回状态 
-     * */
+     * Return the current connection state. */
     public synchronized int getState() {
         return mState;
     }
 
     /**
-     * 开始函数入口 
+     * Start the Rfcomm client service. 
      * */
     public synchronized void start() {
         // Cancel any thread attempting to make a connection
@@ -86,7 +88,8 @@ public class BluetoothRfcommClient {
     }
 
     /**
-     * 提供设备地址，进行连接
+     * Start the ConnectThread to initiate a connection to a remote device.
+     * - device - The BluetoothDevice to connect
      */
     public synchronized void connect(BluetoothDevice device) {
 
@@ -105,7 +108,9 @@ public class BluetoothRfcommClient {
     }
 
     /**
-     * 保持连接
+     * Start the ConnectedThread to begin managing a Bluetooth connection
+     * - socket - The BluetoothSocket on which the connection was made
+     * - device - The BluetoothDevice that has been connected
      */
     public synchronized void connected(BluetoothSocket socket, BluetoothDevice device) {
 
@@ -130,7 +135,7 @@ public class BluetoothRfcommClient {
     }
 
     /**
-     *stop
+     * Stop all threads
      */
     public synchronized void stop() {
         if (mConnectThread != null) {mConnectThread.cancel(); mConnectThread = null;}
@@ -139,33 +144,51 @@ public class BluetoothRfcommClient {
     }
 
     /**
-     * 连接失败的操作.
+     * Write to the ConnectedThread in an unsynchronized manner
+     * - out - The bytes to write - ConnectedThread#write(byte[])
+     */
+    public void write(byte[] out) {
+        // Create temporary object
+        ConnectedThread r;
+        // Synchronize a copy of the ConnectedThread
+        synchronized (this) {
+            if (mState != STATE_CONNECTED) return;
+            r = mConnectedThread;
+        }
+        // Perform the write unsynchronized
+        r.write(out);
+    }
+
+    /**
+     * Indicate that the connection attempt failed and notify the UI Activity.
      */
     private void connectionFailed() {
         setState(STATE_NONE);
         // Send a failure message back to the Activity
         Message msg = mHandler.obtainMessage(ECGmain.MESSAGE_TOAST);
         Bundle bundle = new Bundle();
-        bundle.putString(ECGmain.TOAST, "无法连接设备e");
+        bundle.putString(ECGmain.TOAST, "Unable to connect device");
         msg.setData(bundle);
         mHandler.sendMessage(msg);
     }
 
     /**
-     * 连接丢失的操作.
+     * Indicate that the connection was lost and notify the UI Activity.
      */
     private void connectionLost() {
         setState(STATE_NONE);
         // Send a failure message back to the Activity
         Message msg = mHandler.obtainMessage(ECGmain.MESSAGE_TOAST);
         Bundle bundle = new Bundle();
-        bundle.putString(ECGmain.TOAST, "设备连接丢失");
+        bundle.putString(ECGmain.TOAST, "Device connection was lost");
         msg.setData(bundle);
         mHandler.sendMessage(msg);
     }
 
     /**
-     * 连接线程.
+     * This thread runs while attempting to make an outgoing connection
+     * with a device. It runs straight through; the connection either
+     * succeeds or fails.
      */
     private class ConnectThread extends Thread {
         private final BluetoothSocket mmSocket;
@@ -227,17 +250,21 @@ public class BluetoothRfcommClient {
         private static final String MYTAG = "BluetoothRfcommClient";
 		private final BluetoothSocket mmSocket;
         private final InputStream mmInStream;
+        private final OutputStream mmOutStream;
 
         public ConnectedThread(BluetoothSocket socket) {
             mmSocket = socket;
             InputStream tmpIn = null;
+            OutputStream tmpOut = null;
             // Get the BluetoothSocket input and output streams
             try {
                 tmpIn = socket.getInputStream();
+                tmpOut = socket.getOutputStream();
             } catch (IOException e) {
             }
 
             mmInStream = tmpIn;
+            mmOutStream = tmpOut;
         }
         
         public void run() {
@@ -266,12 +293,59 @@ public class BluetoothRfcommClient {
     								dataString = "";
     							}else	dataString = dataString+AsciiToChar(buffer[i]);
     					}                    
+    					// Log.i(MYTAG, "aaa:"+dataString, null);
+    					// Send the obtained bytes to the UI Activity
+    					// mHandler.obtainMessage(ECGmain.MESSAGE_READ, bytes, -1, dataString)
+    					//        .sendToTarget();
+    					// mHandler.obtainMessage(ECGmain.MESSAGE_READ, bytes, -1, buffer).sendToTarget();
+    					//  dataString = "";
     				} catch (IOException e) {
                     //
     					connectionLost();
     					break;
     				}
     			}
+            }
+        }
+
+/*        public void run() {
+            byte[] buffer = new byte[1024];
+            int bytes;
+            // Keep listening to the InputStream while connected
+            while (true) {//这里的true可以改为一个开关
+                try {
+                    // Read from the InputStream
+                    bytes = mmInStream.read(buffer);
+                    String dataString = "";
+                    for (int i = 0; i < bytes; i++) {
+                    	Log.i(MYTAG,Integer.toString(buffer[i]), null);
+						dataString = dataString+AsciiToChar(buffer[i]);
+					}                    
+                   // Log.i(MYTAG, "aaa:"+dataString, null);
+                    // Send the obtained bytes to the UI Activity
+                    mHandler.obtainMessage(ECGmain.MESSAGE_READ, bytes, -1, dataString)
+                            .sendToTarget();
+                   // mHandler.obtainMessage(ECGmain.MESSAGE_READ, bytes, -1, buffer).sendToTarget();
+                  //  dataString = "";
+                } catch (IOException e) {
+                    //
+                    connectionLost();
+                    break;
+                }
+            }
+        }
+*/
+        /**
+         * Write to the connected OutStream.
+         */
+        public void write(byte[] buffer) {
+            try {
+                mmOutStream.write(buffer);
+                // Share the sent message back to the UI Activity
+                mHandler.obtainMessage(ECGmain.MESSAGE_WRITE, -1, -1, buffer)
+                        .sendToTarget();
+            } catch (IOException e) {
+                //
             }
         }
         public char AsciiToChar(int asci) {//ascii码转化为他所代表的字符
